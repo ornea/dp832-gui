@@ -5,7 +5,6 @@
 #
 # Python 3.10.0
 # pip install pyside6
-# pip install PyQt5 
 # pip install pyqtgraph
 # pip install pyvisa-py
 # pip install matplotlib
@@ -32,8 +31,8 @@ import numpy as np
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 
-from PyQt5.QtWidgets import * #QApplication, QWidget, QMainWindow, QPushButton, QMessageBox, QBoxLayout
-from PyQt5 import QtCore, QtGui
+from PySide6.QtWidgets import * #QApplication, QWidget, QMainWindow, QPushButton, QMessageBox, QBoxLayout
+from PySide6 import QtCore, QtGui
 
 try:
     import pyqtgraph as pg
@@ -145,7 +144,11 @@ class DP83XGUI(QMainWindow):
     def __init__(self):
         super(DP83XGUI, self).__init__()
         self.setWindowIcon(QtGui.QIcon('frog1.bmp'))
-        wid = QWidget()
+        root = QWidget()
+        mainLayout = QVBoxLayout()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        self.container = QWidget()
         layout = QVBoxLayout()
         self.drawDone = False
 
@@ -201,9 +204,9 @@ class DP83XGUI(QMainWindow):
 
         self.channelSpecsDP83x = []
         
-        self.channelSpecsDP83x.append({'DP832A':{'maxV':30,'maxI':3},'DP831':{'maxV':8 ,'maxI':5}})
-        self.channelSpecsDP83x.append({'DP832A':{'maxV':30,'maxI':3},'DP831':{'maxV':30,'maxI':2}})
-        self.channelSpecsDP83x.append({'DP832A':{'maxV':5 ,'maxI':3},'DP831':{'maxV':30,'maxI':2}})
+        self.channelSpecsDP83x.append({'DP832A':{'maxV':30,'maxI':3},'DP832':{'maxV':30,'maxI':3},'DP831':{'maxV':8 ,'maxI':5}})
+        self.channelSpecsDP83x.append({'DP832A':{'maxV':30,'maxI':3},'DP832':{'maxV':30,'maxI':3},'DP831':{'maxV':30,'maxI':2}})
+        self.channelSpecsDP83x.append({'DP832A':{'maxV':5 ,'maxI':3},'DP832':{'maxV':5 ,'maxI':3},'DP831':{'maxV':30,'maxI':2}})
         
         self.graphlist = []
         self.graphsettings = []
@@ -242,14 +245,22 @@ class DP83XGUI(QMainWindow):
         self.absSinX = (sinX +1)/2
         shiftedAbsSinX = (np.sin((2*np.pi*F)*((x+(3/4)*(self.numSamples))/self.numSamples) )+1)/2
 
-        wid.setLayout(layout)
+        self.container.setLayout(layout)
+        scroll.setWidget(self.container)
+        mainLayout.addWidget(scroll)
+        root.setLayout(mainLayout)
 
-        self.setCentralWidget(wid)
+        self.setCentralWidget(root)
         self.setWindowTitle("DP83X GUI")
 
+    def closeEvent(self, event):
+        self.dis()
+        event.accept()
+
     def addGraphs(self, graphnum):
-        layout = self.centralWidget().layout()
+        layout = self.container.layout()
         gb = QGroupBox()
+        gb.setMinimumHeight(240)
 
         self.gridLayoutChannel = QGridLayout()
 
@@ -511,7 +522,12 @@ class DP83XGUI(QMainWindow):
         QSettings().setValue('constring', constr)
 
         self.inst = DP83X()
-        self.inst.conn(constr)
+        try:
+            self.inst.conn(constr)
+        except Exception as err:
+            self.statusBar().showMessage(str(err))
+            return
+
         self.leModel.setText(self.inst.identify()["model"]) 
 
         self.layoutcon.addWidget(self.loggingPushButton)
@@ -599,7 +615,7 @@ class DP83XGUI(QMainWindow):
         #print(self.loggingPushButton.isChecked())
 
     def logData(self):#,readings,graphnum):
-        path_to_log = "captures\\"
+        path_to_log = "captures/"
         file_format = "csv"
         try:
             os.makedirs(path_to_log)
@@ -634,17 +650,20 @@ class DP83XGUI(QMainWindow):
                 self.temperatureWarningToggle = False
                 self.leTemp.setStyleSheet("QLineEdit"
                                 "{"
+                                "color: black;"
                                 "background : pink;"
                                 "}")
             else:
                 self.temperatureWarningToggle = True
                 self.leTemp.setStyleSheet("QLineEdit"
                                 "{"
+                                "color: black;"
                                 "background : white;"
                                 "}")
         else:
                 self.leTemp.setStyleSheet("QLineEdit"
                                 "{"
+                                "color: black;"
                                 "background : lightgreen;"
                                 "}")        
             
@@ -708,4 +727,4 @@ if __name__ == '__main__':
     window.show()
 
     # Run the main Qt loop
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
