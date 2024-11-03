@@ -5,7 +5,7 @@
 #
 # Python 3.10.0
 # pip install pyside6
-# pip install PyQt5 
+# pip install PyQt5 <-may not be needed
 # pip install pyqtgraph
 # pip install pyvisa-py
 # pip install matplotlib
@@ -16,6 +16,7 @@
 # 1. Use the fetched model number to set the channel limits - DONE
 # 2. start plot at Zero - two? samples so it clears the buffer and does a better job of auto ranging - DONE
 
+
 CONNECTSTRING = "TCPIP0::172.16.0.125::INSTR"
 #CONNECTSTRING = "TCPIP0::192.168.1.60::INSTR"
 
@@ -24,16 +25,22 @@ import sys
 import time
 
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+#from matplotlib import pyplot as plt
 
 import numpy as np
 
+from PySide6 import *
 
 from PySide6.QtCore import *
-from PySide6.QtGui import *
+#from PySide6.QtGui import *
 
-from PyQt5.QtWidgets import * #QApplication, QWidget, QMainWindow, QPushButton, QMessageBox, QBoxLayout
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import *
+from PySide6 import QtGui
+
+#from PyQt5.QtWidgets import * #QApplication, QWidget, QMainWindow, QPushButton, QMessageBox, QBoxLayout
+#from PyQt5 import QtCore, QtGui
 
 try:
     import pyqtgraph as pg
@@ -693,6 +700,8 @@ class DP83XGUI(QMainWindow):
                 if self.graphsettings[i]["penabled"].isChecked():
                     g.passTrace(self.pdata[i], pen='g', clear=clear)
 
+
+
 def makeApplication():
     # Create the Qt Application
     app = QApplication(sys.argv)
@@ -708,4 +717,4 @@ if __name__ == '__main__':
     window.show()
 
     # Run the main Qt loop
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
